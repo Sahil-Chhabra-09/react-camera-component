@@ -350,13 +350,3 @@ Contributions welcome! Please open an issue or submit a PR.
 ## License
 
 MIT
-
-## Support
-
-- 📖 **Documentation** — _coming soon_
-- 🐛 **Report Bug** — _coming soon_
-- 💡 **Request Feature** — _coming soon_
-
----
-
-Made with ❤️

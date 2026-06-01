@@ -15,6 +15,7 @@
     "clean": "rm -rf dist"
   },
   "keywords": [
+    "react camera component",
     "browser camera",
     "camera",
     "camera access",

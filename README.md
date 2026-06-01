@@ -1,5 +1,7 @@
 # React Camera Capture
 
+> **🚀 [Live Demo & Docs → react-camera-component.vercel.app](https://react-camera-component.vercel.app)**
+
 A lightweight, headless React camera component for capturing images and recording videos. Built with TypeScript and designed for maximum flexibility.
 
 ## Features

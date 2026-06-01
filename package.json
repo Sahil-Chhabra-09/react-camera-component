@@ -1,6 +1,6 @@
 {
   "name": "react-camera-component",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "A reusable React component for capturing images and videos from the camera.",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
@@ -72,7 +72,7 @@
   "bugs": {
     "url": "https://github.com/Sahil-Chhabra-09/react-camera-component/issues"
   },
-  "homepage": "https://github.com/Sahil-Chhabra-09/react-camera-component#readme",
+  "homepage": "https://react-camera-component.vercel.app",
   "devDependencies": {
     "@babel/core": "^7.23.9",
     "@babel/preset-env": "^7.23.9",

@@ -49,7 +49,7 @@ function App() {
 | `facingMode`         | `"user" \| "environment"`                     | `"user"`      | Initial camera facing mode                 |
 | `maxVideoDuration`   | `number`                                      | `60000`       | Maximum video recording duration (ms)      |
 | `imageFormat`        | `"image/png" \| "image/jpeg" \| "image/webp"` | `"image/png"` | Format for captured images                 |
-| `imageQuality`       | `number`                                      | `1`           | Image quality between 0 and 1              |
+| `imageQuality`       | `number`                                      | `1`           | Image quality 0–1. **Only applies to `image/jpeg` and `image/webp`** — has no effect on `image/png` (PNG is lossless) |
 | `displayStream`      | `boolean`                                     | `true`        | Show/hide video stream                     |
 | `captureAudio`       | `boolean`                                     | `false`       | Enable audio capture for videos            |
 | `containerClassName` | `string`                                      | `undefined`   | CSS class for container div                |

@@ -108,6 +108,14 @@ export const CameraComponent = forwardRef<
     const captureImage = useCallback(() => {
       if (!videoRef.current || !canvasRef.current) return;
 
+      if (imageFormat === "image/png" && imageQuality < 1) {
+        console.warn(
+          "[react-camera-component] imageQuality has no effect when imageFormat is \"image/png\". " +
+          "PNG is a lossless format — the quality parameter is ignored by the browser. " +
+          "Use \"image/jpeg\" or \"image/webp\" to control output size via imageQuality."
+        );
+      }
+
       const video = videoRef.current;
       const canvas = canvasRef.current;
       canvas.width = video.videoWidth;

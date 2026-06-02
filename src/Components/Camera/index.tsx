@@ -37,15 +37,32 @@ export const CameraComponent = forwardRef<
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const chunksRef = useRef<Blob[]>([]);
+    // Keep stream in both a ref (for synchronous access inside callbacks) and
+    // state (so the video element visibility re-renders correctly).
+    const streamRef = useRef<MediaStream | null>(null);
     const [stream, setStream] = useState<MediaStream | null>(null);
     const [isStreaming, setIsStreaming] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
+    // Keep facingMode in a ref so switchCamera always reads the current value
+    // without needing to be a useCallback dependency (which would cause stale
+    // closures after multiple switches).
+    const facingRef = useRef<"user" | "environment">(facingMode);
     const [currentFacingMode, setCurrentFacingMode] = useState(facingMode);
+    // Guard against concurrent getUserMedia calls (rapid camera switches).
+    const isStartingRef = useRef(false);
 
     const startStream = useCallback(
-      async (facing: "user" | "environment" = currentFacingMode) => {
+      async (facing: "user" | "environment" = facingRef.current) => {
+        // Prevent concurrent getUserMedia calls from racing each other.
+        if (isStartingRef.current) return;
+        isStartingRef.current = true;
+
         try {
-          if (stream) stream.getTracks().forEach((t) => t.stop());
+          // Always read the live stream from the ref, not a stale closure.
+          if (streamRef.current) {
+            streamRef.current.getTracks().forEach((t) => t.stop());
+            streamRef.current = null;
+          }
 
           const mediaStream = await navigator.mediaDevices.getUserMedia({
             video: {
@@ -61,8 +78,10 @@ export const CameraComponent = forwardRef<
             audio: captureAudio,
           });
 
+          streamRef.current = mediaStream;
           setStream(mediaStream);
           setIsStreaming(true);
+          facingRef.current = facing;
           setCurrentFacingMode(facing);
 
           if (videoRef.current) {
@@ -82,28 +101,25 @@ export const CameraComponent = forwardRef<
               : new Error("Failed to access camera");
           console.error("Error accessing camera:", err);
           onError?.(err);
+        } finally {
+          isStartingRef.current = false;
         }
       },
-      [
-        currentFacingMode,
-        stream,
-        onStreamStart,
-        onError,
-        frameRate,
-        width,
-        height,
-        captureAudio,
-      ]
+      // Remove `stream` and `currentFacingMode` from deps — they are now read
+      // from refs synchronously, so callbacks never go stale after switches.
+      [onStreamStart, onError, frameRate, width, height, captureAudio]
     );
 
     const stopStream = useCallback(() => {
-      if (stream) {
-        stream.getTracks().forEach((t) => t.stop());
+      // Read from ref so this always stops the actual current stream.
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
         setStream(null);
       }
       setIsStreaming(false);
       if (isRecording) stopRecording();
-    }, [stream, isRecording]);
+    }, [isRecording]);
 
     const captureImage = useCallback(() => {
       if (!videoRef.current || !canvasRef.current) return;
@@ -144,11 +160,11 @@ export const CameraComponent = forwardRef<
     }, [imageFormat, imageQuality, onCapture]);
 
     const startRecording = useCallback(() => {
-      if (!stream) return;
+      if (!streamRef.current) return;
 
       try {
         chunksRef.current = [];
-        const mediaRecorder = new MediaRecorder(stream, {
+        const mediaRecorder = new MediaRecorder(streamRef.current!, {
           mimeType: "video/webm",
         });
 
@@ -183,7 +199,7 @@ export const CameraComponent = forwardRef<
         console.error(err);
         onError?.(err);
       }
-    }, [stream, maxVideoDuration, onCapture, onError]);
+    }, [maxVideoDuration, onCapture, onError]);
 
     const stopRecording = useCallback(() => {
       if (
@@ -201,9 +217,10 @@ export const CameraComponent = forwardRef<
     }, [isRecording, startRecording, stopRecording]);
 
     const switchCamera = useCallback(() => {
-      const newFacing = currentFacingMode === "user" ? "environment" : "user";
+      // Read facingRef synchronously — no stale closure risk.
+      const newFacing = facingRef.current === "user" ? "environment" : "user";
       startStream(newFacing);
-    }, [currentFacingMode, startStream]);
+    }, [startStream]);
 
     useEffect(() => {
       if (autoPlayOnStart) startStream();
